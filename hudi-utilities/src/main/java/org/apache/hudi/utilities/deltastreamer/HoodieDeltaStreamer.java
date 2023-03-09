@@ -740,8 +740,8 @@ public class HoodieDeltaStreamer implements Serializable {
               if (postWriteTerminationStrategy.isPresent()) {
                 if (postWriteTerminationStrategy.get().shouldShutdown(scheduledCompactionInstantAndRDD.isPresent() ? Option.of(scheduledCompactionInstantAndRDD.get().getRight()) :
                     Option.empty())) {
-                  LOG.error("Shutting down Delta Sync due to postWriteTerminationStrategy");
-                  error = false;
+                  LOG.info("Shutting down Delta Sync due to postWriteTerminationStrategy");
+                  shutdownAsyncServices(error);
                   shutdown(false);
                 }
               }

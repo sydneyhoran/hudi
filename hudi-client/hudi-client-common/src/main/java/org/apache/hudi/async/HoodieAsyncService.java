@@ -101,9 +101,12 @@ public abstract class HoodieAsyncService implements Serializable {
     }
     try {
       future.get();
+    } catch (InterruptedException ex) {
+      LOG.error("InterruptedException, passing");
+      return;
     } catch (ExecutionException ex) {
       LOG.error("Service shutdown with error", ex);
-      throw ex;
+      //       throw ex;
     }
   }
 
@@ -119,6 +122,7 @@ public abstract class HoodieAsyncService implements Serializable {
       shutdown = true;
       if (executor != null) {
         if (force) {
+          LOG.warn("Force shutting down executor");
           executor.shutdownNow();
         } else {
           executor.shutdown();
