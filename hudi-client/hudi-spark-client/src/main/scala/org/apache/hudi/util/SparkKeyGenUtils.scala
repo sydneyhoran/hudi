@@ -39,16 +39,23 @@ object SparkKeyGenUtils {
    * @param keyGen key generator
    * @return partition columns
    */
-  def getPartitionColumns(keyGen: KeyGenerator, typedProperties: TypedProperties): String = {
+  def getPartitionColumns(keyGen: KeyGenerator, typedProperties: TypedProperties, forConfFile: Boolean=false): String = {
     keyGen match {
       // For CustomKeyGenerator and CustomAvroKeyGenerator, the partition path filed format
       // is: "field_name: field_type", we extract the field_name from the partition path field.
       case c: BaseKeyGenerator
         if c.isInstanceOf[CustomKeyGenerator] || c.isInstanceOf[CustomAvroKeyGenerator] =>
-        c.getPartitionPathFields.asScala.map(pathField =>
-          pathField.split(CustomAvroKeyGenerator.SPLIT_REGEX)
-            .headOption.getOrElse(s"Illegal partition path field format: '$pathField' for ${c.getClass.getSimpleName}"))
-          .mkString(",")
+            if (forConfFile) {
+                // don't split the path field by ":" for the hoodie.properties file (so future runs are compatible)
+                c.getPartitionPathFields.asScala.mkString(",")
+            } else {
+                // when normally getting the partitionpath, extract the field_name only
+                c.getPartitionPathFields.asScala.map(pathField =>
+                  pathField.split(CustomAvroKeyGenerator.SPLIT_REGEX)
+                    .headOption.getOrElse(s"Illegal partition path field format: '$pathField' for ${c.getClass.getSimpleName}"))
+                  .mkString(",")
+            }
+
 
       case b: BaseKeyGenerator => b.getPartitionPathFields.asScala.mkString(",")
       case _ => typedProperties.getString(KeyGeneratorOptions.PARTITIONPATH_FIELD_NAME.key())

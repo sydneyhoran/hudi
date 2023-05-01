@@ -361,7 +361,7 @@ public class DeltaSync implements Serializable, Closeable {
   private void initializeEmptyTable() throws IOException {
     this.commitsTimelineOpt = Option.empty();
     this.allCommitsTimelineOpt = Option.empty();
-    String partitionColumns = SparkKeyGenUtils.getPartitionColumns(keyGenerator, props);
+    String partitionColumns = SparkKeyGenUtils.getPartitionColumns(keyGenerator, props, true);
     HoodieTableMetaClient.withPropertyBuilder()
         .setTableType(cfg.tableType)
         .setTableName(cfg.targetTableName)
@@ -458,7 +458,7 @@ public class DeltaSync implements Serializable, Closeable {
       resumeCheckpointStr = getCheckpointToResume(commitsTimelineOpt);
     } else {
       // initialize the table for the first time.
-      String partitionColumns = SparkKeyGenUtils.getPartitionColumns(keyGenerator, props);
+      String partitionColumns = SparkKeyGenUtils.getPartitionColumns(keyGenerator, props, true);
       HoodieTableMetaClient.withPropertyBuilder()
           .setTableType(cfg.tableType)
           .setTableName(cfg.targetTableName)
@@ -1187,7 +1187,7 @@ public class DeltaSync implements Serializable, Closeable {
    * @return Set of partition columns.
    */
   private Set<String> getPartitionColumns(KeyGenerator keyGenerator, TypedProperties props) {
-    String partitionColumns = SparkKeyGenUtils.getPartitionColumns(keyGenerator, props);
+    String partitionColumns = SparkKeyGenUtils.getPartitionColumns(keyGenerator, props, false);
     return Arrays.stream(partitionColumns.split(",")).collect(Collectors.toSet());
   }
 

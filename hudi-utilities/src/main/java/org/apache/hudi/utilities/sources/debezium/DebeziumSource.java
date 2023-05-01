@@ -152,11 +152,13 @@ public abstract class DebeziumSource extends RowSource {
     if (deserializerClassName.equals(StringDeserializer.class.getName())) {
       kafkaData = AvroConversionUtils.createDataFrame(
           KafkaUtils.<String, String>createRDD(sparkContext, offsetGen.getKafkaParams(), offsetRanges, LocationStrategies.PreferConsistent())
+              .filter(x -> filterForNullValues(x.value()))
               .map(obj -> convertor.fromJson(obj.value()))
               .rdd(), schemaStr, sparkSession);
     } else {
       kafkaData = AvroConversionUtils.createDataFrame(
           KafkaUtils.createRDD(sparkContext, offsetGen.getKafkaParams(), offsetRanges, LocationStrategies.PreferConsistent())
+              .filter(x -> filterForNullValues(x.value()))
               .map(obj -> (GenericRecord) obj.value())
               .rdd(), schemaStr, sparkSession);
     }
@@ -167,6 +169,13 @@ public abstract class DebeziumSource extends RowSource {
     // Some required transformations to ensure debezium data types are converted to spark supported types.
     return convertArrayColumnsToString(convertColumnToNullable(sparkSession,
         convertDateColumns(debeziumDataset, new Schema.Parser().parse(schemaStr))));
+  }
+
+  private static Boolean filterForNullValues(Object value) {
+    if (value == null) {
+      return false;
+    }
+    return true;
   }
 
   /**
